@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from .models import Message
 from .serializers import MessageSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -176,3 +176,64 @@ class MessageViewSet(viewsets.ModelViewSet):
             decrypted_messages.append(decrypted_message)
 
         return Response(decrypted_messages)
+        
+    @action(detail=True, methods=['delete'], url_path='delete-message')
+    def delete_message(self, request, pk=None):
+        try:
+            message = Message.objects.get(pk=pk)
+            
+            # Check if the user is authorized to delete this message
+            if message.sender != request.user:
+                return Response(
+                    {'detail': 'You are not authorized to delete this message'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+                
+            # Delete the message
+            message.delete()
+            return Response(
+                {'detail': 'Message deleted successfully'}, 
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except Message.DoesNotExist:
+            return Response(
+                {'detail': 'Message not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+    @action(detail=True, methods=['put', 'patch'], url_path='update-message')
+    def update_message(self, request, pk=None):
+        try:
+            message = Message.objects.get(pk=pk)
+            
+            # Check if the user is authorized to update this message
+            if message.sender != request.user:
+                return Response(
+                    {'detail': 'You are not authorized to update this message'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+                
+            # Get the new content from the request
+            new_content = request.data.get('content')
+            if not new_content:
+                return Response(
+                    {'detail': 'Content is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            # Encrypt the new content
+            encrypted_content = self.cipher.encrypt(new_content.encode()).decode()
+            
+            # Update the message
+            message.content = encrypted_content
+            message.save()
+            
+            return Response(
+                {'detail': 'Message updated successfully'}, 
+                status=status.HTTP_200_OK
+            )
+        except Message.DoesNotExist:
+            return Response(
+                {'detail': 'Message not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
