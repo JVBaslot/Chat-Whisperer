@@ -138,11 +138,11 @@ onMounted(() => {
       >
         <v-card class="listing-card h-100">
           <v-card-title>{{ listing.title }}</v-card-title>
-          <v-chip class="ma-2" color="primary" size="small" label>
+          <v-chip class="ma-2" color="#FE4F5A" size="small" label>
             {{ listing.category }}
           </v-chip>
           <v-card-text>
-            <p class="text-h6 font-weight-bold primary--text">${{ listing.price }}</p>
+            <p class="text-h6 font-weight-bold" style="color: #FE4F5A">${{ listing.price }}</p>
             <p>{{ listing.description }}</p>
           </v-card-text>
           <v-card-actions>

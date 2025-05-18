@@ -240,9 +240,9 @@ const isActiveTab = (tab) => activeTab.value === tab;
         <!-- Freedom Wall Tab -->
         <v-row v-else-if="activeTab === 'freedom-wall'">
           <v-col cols="12">
-            <v-card class="pa-5">
+          
              <FreedomWall />
-            </v-card>
+          
           </v-col>
         </v-row>
 
