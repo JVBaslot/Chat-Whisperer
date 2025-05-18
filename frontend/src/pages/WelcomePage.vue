@@ -1,3 +1,10 @@
+  <script>
+  export default {
+    name: "WelcomePage",
+  };
+  </script>
+
+
 <!-- WelcomePage.vue -->
 <template>
     <v-container fluid>
@@ -16,11 +23,7 @@
     </v-container>
   </template>
   
-  <script>
-  export default {
-    name: "WelcomePage",
-  };
-  </script>
+
   
   <style scoped>
   .headline {

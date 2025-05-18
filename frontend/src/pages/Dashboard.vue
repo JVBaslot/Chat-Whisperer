@@ -1,3 +1,89 @@
+<script setup>
+import { ref, onMounted, watch } from "vue";
+import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
+import UserTable from "@/views/dashboard/UserTable.vue";
+import ChatBox from "@/components/ChatBox.vue";
+import avatarImage from "@/assets/images/user.png";
+import MessagesTable from "@/views/dashboard/MessagesTable.vue";
+
+const users = ref([]);
+const totalUsers = ref(0);
+const totalAdmins = ref(0);
+const activeTab = ref(localStorage.getItem("activeTab") || "dashboard");
+const messages = ref([]);
+const messageError = ref(null); // Variable to store error messages
+
+const fetchUsers = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/users/", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+    users.value = response.data.data.users.map((user) => ({
+      username: user.name,
+      email: user.email,
+      status: "active",
+      is_superuser: user.is_superuser,
+    }));
+  } catch (err) {
+    console.error("Error fetching users:", err.message);
+  }
+};
+
+const fetchMessages = async () => {
+  try {
+    const response = await axios.get(
+      "http://127.0.0.1:8000/chat/api/messages/",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      }
+    );
+    console.log("API Response:", response);
+    messages.value = response?.data || []; // Adjusted to directly use the response data
+    messageError.value = null; // Clear error if the fetch is successful
+  } catch (err) {
+    console.error("Error fetching messages:", err.message);
+    messageError.value = "Failed to load messages."; // Set error message
+  }
+};
+
+const fetchUserCounts = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/user-counts/", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+    totalUsers.value = response.data.total_users;
+    totalAdmins.value = response.data.total_admins;
+  } catch (err) {
+    console.error("Error fetching user counts:", err.message);
+  }
+};
+
+const logout = () => {
+  const authStore = useAuthStore();
+  authStore.logout();
+};
+
+onMounted(() => {
+  fetchUsers();
+  fetchMessages();
+  fetchUserCounts();
+});
+
+watch(activeTab, (newTab) => {
+  localStorage.setItem("activeTab", newTab);
+});
+
+const isActiveTab = (tab) => activeTab.value === tab;
+</script>
+
+
 <template>
   <v-app class="app-container">
     <!-- Top Navigation Bar -->
@@ -129,90 +215,7 @@
   </v-app>
 </template>
 
-<script setup>
-import { ref, onMounted, watch } from "vue";
-import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
-import UserTable from "@/views/dashboard/UserTable.vue";
-import ChatBox from "@/components/ChatBox.vue";
-import avatarImage from "@/assets/images/user.png";
-import MessagesTable from "@/views/dashboard/MessagesTable.vue";
 
-const users = ref([]);
-const totalUsers = ref(0);
-const totalAdmins = ref(0);
-const activeTab = ref(localStorage.getItem("activeTab") || "dashboard");
-const messages = ref([]);
-const messageError = ref(null); // Variable to store error messages
-
-const fetchUsers = async () => {
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/api/users/", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    users.value = response.data.data.users.map((user) => ({
-      username: user.name,
-      email: user.email,
-      status: "active",
-      is_superuser: user.is_superuser,
-    }));
-  } catch (err) {
-    console.error("Error fetching users:", err.message);
-  }
-};
-
-const fetchMessages = async () => {
-  try {
-    const response = await axios.get(
-      "http://127.0.0.1:8000/chat/api/messages/",
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      }
-    );
-    console.log("API Response:", response);
-    messages.value = response?.data || []; // Adjusted to directly use the response data
-    messageError.value = null; // Clear error if the fetch is successful
-  } catch (err) {
-    console.error("Error fetching messages:", err.message);
-    messageError.value = "Failed to load messages."; // Set error message
-  }
-};
-
-const fetchUserCounts = async () => {
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/api/user-counts/", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    totalUsers.value = response.data.total_users;
-    totalAdmins.value = response.data.total_admins;
-  } catch (err) {
-    console.error("Error fetching user counts:", err.message);
-  }
-};
-
-const logout = () => {
-  const authStore = useAuthStore();
-  authStore.logout();
-};
-
-onMounted(() => {
-  fetchUsers();
-  fetchMessages();
-  fetchUserCounts();
-});
-
-watch(activeTab, (newTab) => {
-  localStorage.setItem("activeTab", newTab);
-});
-
-const isActiveTab = (tab) => activeTab.value === tab;
-</script>
 
 <style scoped>
 .custom-main {
