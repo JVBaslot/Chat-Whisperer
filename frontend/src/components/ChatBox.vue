@@ -116,7 +116,7 @@ export default {
           this.fetchMessages();
           this.fetchReplies();
         }
-      }, 2000);
+      }, 200000);
     },
     async sendMessage() {
       if (!this.selectedReceiver || !this.newMessage) return;

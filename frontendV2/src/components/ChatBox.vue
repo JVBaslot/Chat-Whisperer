@@ -223,7 +223,7 @@ export default {
           this.fetchMessages();
           this.fetchReplies();
         }
-      }, 2000);
+      }, 200000);
     },
   },
 };

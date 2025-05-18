@@ -6,6 +6,8 @@ import UserTable from "@/views/dashboard/UserTable.vue";
 import ChatBox from "@/components/ChatBox.vue";
 import avatarImage from "@/assets/images/user.png";
 import MessagesTable from "@/views/dashboard/MessagesTable.vue";
+import FreedomWall from "@/pages/FreedomWall.vue";
+import Listings from "@/pages/Listings.vue"
 
 const users = ref([]);
 const totalUsers = ref(0);
@@ -119,6 +121,30 @@ const isActiveTab = (tab) => activeTab.value === tab;
             Send a Message
           </span>
         </v-tab>
+        <v-tab :class="{ 'active-tab': isActiveTab('freedom-wall') }" value="freedom-wall">
+          <v-icon
+            left
+            class="me-1"
+            :class="{ 'active-icon': isActiveTab('freedom-wall') }"
+          >
+            mdi-message-text
+          </v-icon>
+          <span :class="{ 'active-text': isActiveTab('freedom-wall') }">
+            Freedom Wall
+          </span>
+        </v-tab>
+        <v-tab :class="{ 'active-tab': isActiveTab('listings') }" value="listings">
+          <v-icon
+            left
+            class="me-1"
+            :class="{ 'active-icon': isActiveTab('listings') }"
+          >
+            mdi-format-list-bulleted
+          </v-icon>
+          <span :class="{ 'active-text': isActiveTab('listings') }">
+            Listings
+          </span>
+        </v-tab>
       </v-tabs>
 
       <v-spacer></v-spacer>
@@ -208,6 +234,22 @@ const isActiveTab = (tab) => activeTab.value === tab;
         <v-row v-else-if="activeTab === 'chats'">
           <v-col cols="12">
             <ChatBox />
+          </v-col>
+        </v-row>
+
+        <!-- Freedom Wall Tab -->
+        <v-row v-else-if="activeTab === 'freedom-wall'">
+          <v-col cols="12">
+            <v-card class="pa-5">
+             <FreedomWall />
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Listings Tab -->
+        <v-row v-else-if="activeTab === 'listings'">
+          <v-col cols="12">
+          <Listings/>
           </v-col>
         </v-row>
       </v-container>
