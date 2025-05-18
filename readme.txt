@@ -1,8 +1,8 @@
-# GenAss
+# Chat-Whisperer
 
 ## Overview
 
-GenAss is a project consisting of two Django REST Framework (DRF) applications that securely communicate by sending and receiving encrypted messages. The project focuses on building secure APIs using middleware for encryption/decryption, along with features like user authentication and a management dashboard.
+Chat-Whisperer is a project consisting of two Django REST Framework (DRF) applications that securely communicate by sending and receiving encrypted messages. The project focuses on building secure APIs using middleware for encryption/decryption, along with features like user authentication and a management dashboard.
 
 Key functionalities include:
 
