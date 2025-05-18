@@ -8,6 +8,7 @@ import avatarImage from "@/assets/images/user.png";
 import MessagesTable from "@/views/dashboard/MessagesTable.vue";
 import FreedomWall from "@/pages/FreedomWall.vue";
 import Listings from "@/pages/Listings.vue"
+import Footer from "@/components/Footer.vue"
 
 const users = ref([]);
 const totalUsers = ref(0);
@@ -187,7 +188,7 @@ const isActiveTab = (tab) => activeTab.value === tab;
 
     <!-- Main Content -->
     <v-main class="custom-main">
-      <v-container fluid class="main-container pa-8 rounded-lg">
+<v-container fluid class="main-container pa-8 rounded-lg" style="min-height: 80vh">
         <!-- Dashboard Tab -->
         <v-row justify="start" v-if="activeTab === 'dashboard'" class="mb-4">
           <v-col cols="2">
@@ -240,10 +241,11 @@ const isActiveTab = (tab) => activeTab.value === tab;
         <!-- Freedom Wall Tab -->
         <v-row v-else-if="activeTab === 'freedom-wall'">
           <v-col cols="12">
-            <v-card class="pa-5">
+          
              <FreedomWall />
-            </v-card>
+          
           </v-col>
+        
         </v-row>
 
         <!-- Listings Tab -->
@@ -252,7 +254,10 @@ const isActiveTab = (tab) => activeTab.value === tab;
           <Listings/>
           </v-col>
         </v-row>
+
+         
       </v-container>
+       <Footer />
     </v-main>
   </v-app>
 </template>

@@ -60,10 +60,10 @@ router.beforeEach((to, from, next) => {
   }
 
   // Restrict access to the Dashboard for non-superusers
-  if (to.path === "/Dashboard" && !isSuperuser) {
+  /* if (to.path === "/Dashboard" && !isSuperuser) {
     alert("Access denied: Only superusers can access the Dashboard.");
     return next("/Chat");
-  }
+  } */
 
   // Redirect superuser to the dashboard on first login if they haven't visited it yet
   if (isAuthenticated && isSuperuser && !hasVisitedDashboard) {
