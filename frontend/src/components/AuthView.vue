@@ -1,3 +1,14 @@
+<script setup>
+import { ref } from "vue";
+import LoginForm from "@/layouts/LoginForm.vue";
+import RegisterForm from "@/layouts/RegisterForm.vue";
+
+const showRegister = ref(false);
+
+const switchToRegister = () => (showRegister.value = true);
+</script>
+
+
 <template>
   <v-container fluid>
     <br />
@@ -40,15 +51,7 @@
   </v-dialog>
 </template>
 
-<script setup>
-import { ref } from "vue";
-import LoginForm from "@/layouts/LoginForm.vue";
-import RegisterForm from "@/layouts/RegisterForm.vue";
 
-const showRegister = ref(false);
-
-const switchToRegister = () => (showRegister.value = true);
-</script>
 
 <style scoped>
 .bg {

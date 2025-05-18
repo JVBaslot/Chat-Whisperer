@@ -1,140 +1,3 @@
-<template>
-  <v-container fluid>
-    <v-row justify="center">
-      <!-- Inbox (top section) -->
-      <v-col cols="3">
-        <v-card class="mb-3 bg-card" elevation="2">
-          <v-card-title>
-            <div class="headline text-center">Available Users</div>
-          </v-card-title>
-          <v-list>
-            <v-list-item-group v-if="filteredUsers.length > 0">
-              <v-list-item
-                v-for="user in filteredUsers"
-                :key="user.id"
-                @click="selectReceiver(user)"
-                class="my-2 ps-8"
-                :class="{
-                  'selected-user':
-                    selectedReceiver && selectedReceiver.id === user.id,
-                }"
-              >
-                <v-list-item-content>
-                  <v-list-item-title class="py-2">
-                    <v-avatar image="@/assets/images/user.png"></v-avatar>
-                    <span class="text-h6 ms-3">{{ user.name }}</span>
-                  </v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-            <v-list-item v-else>
-              <v-list-item-content>
-                <v-list-item-title
-                  >No conversations available...</v-list-item-title
-                >
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-col>
-      <v-col cols="8">
-        <v-card v-if="selectedReceiver" class="pa-6 bg-card" elevation="2">
-          <v-card-title>
-            <div>
-              <div class="headline">{{ selectedReceiver.name }}</div>
-              <div class="caption">Chat with {{ selectedReceiver.name }}</div>
-            </div>
-          </v-card-title>
-
-          <v-card-subtitle>
-            <v-scroll-y class="message-list">
-              <v-list class="bg-transparent">
-                <v-list-item-group v-if="messages && messages.length > 0">
-                  <v-list-item v-for="message in messages" :key="message.id">
-                    <v-list-item-content>
-                      <v-list-item-title>
-                        <v-card class="pa-6 mb-3 rounded-s-xl" color="#FE4F5A">
-                          <h4 class="mx-2">{{ message.content }}</h4>
-                        </v-card>
-                      </v-list-item-title>
-                      <div class="mb-5">
-                        <span class="mx-5">{{ message.timestamp }}</span>
-                        <span class="mx-5"
-                          >sent to: {{ message.receiver }}</span
-                        >
-                        <span class="mx-5"
-                          >Ensure that your secrets are safe with us.</span
-                        >
-                      </div>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-item-group>
-                <v-list-item v-else>
-                  <v-list-item-content>
-                    <v-list-item-title>No messages yet...</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-scroll-y>
-          </v-card-subtitle>
-
-          <!-- Message Input and button -->
-          <v-card-actions>
-            <v-row>
-              <v-col>
-                <div class="d-flex">
-                  <v-textarea
-                    v-model="newMessage"
-                    color="red-accent-1"
-                     bg-color="red-lighten-4"
-                    placeholder="Type your message here..."
-                    rows="1"
-                    variant="outlined"
-                    rounded
-                    class="flex-grow-1 me-2"
-                  />
-                  <v-btn
-                    @click="sendMessage"
-                    :disabled="!newMessage"
-                    class="ms-2"
-                    icon="mdi-send"
-                    color="#FE4F5A"
-                    variant="tonal"
-                    size="large"
-                  ></v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-actions>
-        </v-card>
-
-        <!-- Reply messages -->
-        <v-card v-else class="pa-3 mt-3" elevation="2">
-          <v-card-title>
-            <div class="headline">No replies yet</div>
-          </v-card-title>
-        </v-card>
-
-        <v-card v-else class="pa-3 bg-card" elevation="2">
-          <v-card-title>
-            <div class="headline">
-              Select a user to whom you want to whisper.
-            </div>
-          </v-card-title>
-          <v-card-subtitle>
-            <div class="caption">
-              Click on a user from the Inbox to start a chat. Ensure that your
-              secrets are safe with us.
-            </div>
-          </v-card-subtitle>
-        </v-card>
-      </v-col>
-    </v-row>
-
-  
-  </v-container>
-</template>
-
 <script>
 import axios from "axios";
 
@@ -291,6 +154,145 @@ export default {
   },
 };
 </script>
+
+
+
+<template>
+  <v-container fluid>
+    <v-row justify="center">
+      <!-- Inbox (top section) -->
+      <v-col cols="3">
+        <v-card class="mb-3 bg-card" elevation="2">
+          <v-card-title>
+            <div class="headline text-center">Available Users</div>
+          </v-card-title>
+          <v-list>
+            <v-list-item-group v-if="filteredUsers.length > 0">
+              <v-list-item
+                v-for="user in filteredUsers"
+                :key="user.id"
+                @click="selectReceiver(user)"
+                class="my-2 ps-8"
+                :class="{
+                  'selected-user':
+                    selectedReceiver && selectedReceiver.id === user.id,
+                }"
+              >
+                <v-list-item-content>
+                  <v-list-item-title class="py-2">
+                    <v-avatar image="@/assets/images/user.png"></v-avatar>
+                    <span class="text-h6 ms-3">{{ user.name }}</span>
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+            <v-list-item v-else>
+              <v-list-item-content>
+                <v-list-item-title
+                  >No conversations available...</v-list-item-title
+                >
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-col>
+      <v-col cols="8">
+        <v-card v-if="selectedReceiver" class="pa-6 bg-card" elevation="2">
+          <v-card-title>
+            <div>
+              <div class="headline">{{ selectedReceiver.name }}</div>
+              <div class="caption">Chat with {{ selectedReceiver.name }}</div>
+            </div>
+          </v-card-title>
+
+          <v-card-subtitle>
+            <v-scroll-y class="message-list">
+              <v-list class="bg-transparent">
+                <v-list-item-group v-if="messages && messages.length > 0">
+                  <v-list-item v-for="message in messages" :key="message.id">
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        <v-card class="pa-6 mb-3 rounded-s-xl" color="#FE4F5A">
+                          <h4 class="mx-2">{{ message.content }}</h4>
+                        </v-card>
+                      </v-list-item-title>
+                      <div class="mb-5">
+                        <span class="mx-5">{{ message.timestamp }}</span>
+                        <span class="mx-5"
+                          >sent to: {{ message.receiver }}</span
+                        >
+                        <span class="mx-5"
+                          >Ensure that your secrets are safe with us.</span
+                        >
+                      </div>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-item-group>
+                <v-list-item v-else>
+                  <v-list-item-content>
+                    <v-list-item-title>No messages yet...</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-scroll-y>
+          </v-card-subtitle>
+
+          <!-- Message Input and button -->
+          <v-card-actions>
+            <v-row>
+              <v-col>
+                <div class="d-flex">
+                  <v-textarea
+                    v-model="newMessage"
+                    color="red-accent-1"
+                     bg-color="red-lighten-4"
+                    placeholder="Type your message here..."
+                    rows="1"
+                    variant="outlined"
+                    rounded
+                    class="flex-grow-1 me-2"
+                  />
+                  <v-btn
+                    @click="sendMessage"
+                    :disabled="!newMessage"
+                    class="ms-2"
+                    icon="mdi-send"
+                    color="#FE4F5A"
+                    variant="tonal"
+                    size="large"
+                  ></v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+
+        <!-- Reply messages -->
+        <v-card v-else class="pa-3 mt-3" elevation="2">
+          <v-card-title>
+            <div class="headline">No replies yet</div>
+          </v-card-title>
+        </v-card>
+
+        <v-card v-else class="pa-3 bg-card" elevation="2">
+          <v-card-title>
+            <div class="headline">
+              Select a user to whom you want to whisper.
+            </div>
+          </v-card-title>
+          <v-card-subtitle>
+            <div class="caption">
+              Click on a user from the Inbox to start a chat. Ensure that your
+              secrets are safe with us.
+            </div>
+          </v-card-subtitle>
+        </v-card>
+      </v-col>
+    </v-row>
+
+  
+  </v-container>
+</template>
 
 <style scoped>
 .headline {
