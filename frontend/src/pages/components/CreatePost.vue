@@ -1,11 +1,12 @@
 <script setup>
 import { ref, defineEmits } from 'vue';
 
-const emit = defineEmits(['create-post', 'update:title', 'update:content', 'update:anonymous']);
+const emit = defineEmits(['create-post', 'update:title', 'update:content', 'update:anonymous', 'navigate-to-all-posts']);
 
 const title = ref('');
 const content = ref('');
-const isAnonymous = ref(true);
+const isAnonymous = ref(true); // Default to anonymous for privacy
+const loadingDialog = ref(false); // Add loading dialog ref
 
 const updateTitle = (event) => {
   title.value = event.target.value;
@@ -23,7 +24,17 @@ const updateAnonymous = (event) => {
 };
 
 const createPost = () => {
+  loadingDialog.value = true; // Show the loading dialog
   emit('create-post');
+  
+  // Simulate posting process with 3 seconds delay
+  setTimeout(() => {
+    loadingDialog.value = false; // Hide the loading dialog
+    emit('navigate-to-all-posts'); // Emit event to navigate to all posts
+    // Reset form
+    title.value = '';
+    content.value = '';
+  }, 3000);
 };
 </script>
 
@@ -52,7 +63,7 @@ const createPost = () => {
     
     <v-checkbox
       v-model="isAnonymous"
-      label="Post anonymously"
+      label="Post anonymously (your identity will be hidden, but you'll still own the post)"
       hide-details
       class="mb-4"
       @change="updateAnonymous"
@@ -67,6 +78,16 @@ const createPost = () => {
         Post
       </v-btn>
     </div>
+    
+    <!-- Loading Dialog -->
+    <v-dialog v-model="loadingDialog" persistent width="300">
+      <v-card>
+        <v-card-text class="text-center pa-5">
+          <v-progress-circular indeterminate color="#FE4F5A" size="64" class="mb-3"></v-progress-circular>
+          <p class="mb-0 mt-2">Posting your content...</p>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

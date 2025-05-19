@@ -1,15 +1,19 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import { ref, onMounted } from 'vue';
+import { useFreedomWall } from './functions/freedomwall.js';
 import FDtabs from './components/FDtabs.vue';
+import Allpost from './components/Allpost.vue';
 import Mypost from './components/Mypost.vue';
 
-const posts = ref([]);
-const filteredPosts = ref([]);
-const loading = ref(false);
-const error = ref(null);
+// Get the freedom wall functionality from the composable
+const { loading, error, fetchPosts, createPost } = useFreedomWall();
+
 const activeTab = ref('All Posts');
 const searchQuery = ref('');
+const currentPage = ref(1);
+const itemsPerPage = 6;
+const posts = ref([]);
+const filteredPosts = ref([]);
 
 const newPost = ref({
   title: '',
@@ -17,36 +21,15 @@ const newPost = ref({
   is_anonymous: true
 });
 
-// Pagination variables
-const currentPage = ref(1);
-const itemsPerPage = 6;
-const totalPages = computed(() => Math.ceil(filteredPosts.value.length / itemsPerPage));
-const paginatedPosts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredPosts.value.slice(start, end);
-});
-
-// Fetch posts from the freedom wall
-const fetchPosts = async () => {
-  loading.value = true;
-  error.value = null;
+// Fetch all posts for the "All Posts" tab
+const getAllPosts = async () => {
   try {
-    // Updated to use the posts endpoint
-    const response = await axios.get('http://127.0.0.1:8000/freedom-wall/api/posts/', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-    });
-    posts.value = response.data || [];
+    posts.value = await fetchPosts();
     filterPosts();
     // Reset to first page when posts are loaded
     currentPage.value = 1;
   } catch (err) {
-    console.error('Error fetching freedom wall posts:', err.message);
-    error.value = 'Failed to load posts. Please try again later.';
-  } finally {
-    loading.value = false;
+    // Error handling is managed by the composable
   }
 };
 
@@ -59,55 +42,35 @@ const handleSearch = (query) => {
 // Handle tab change
 const handleTabChange = (tab) => {
   activeTab.value = tab;
-  filterPosts();
-};
-
-// Filter posts based on active tab and search query
-const filterPosts = () => {
-  let result = [...posts.value];
   
-  // Filter by tab
-  if (activeTab.value === 'My Posts') {
-    const userId = getCurrentUserId(); // You'll need to implement this function
-    result = result.filter(post => post.author_id === userId);
+  // Only fetch all posts when switching to All Posts tab
+  if (tab === 'All Posts') {
+    getAllPosts();
   }
   
-  // Filter by search query
+  // Reset page when switching tabs
+  currentPage.value = 1;
+};
+
+// Filter posts based on search query (for All Posts tab)
+const filterPosts = () => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(post => 
+    filteredPosts.value = posts.value.filter(post => 
       post.title.toLowerCase().includes(query) || 
       post.content.toLowerCase().includes(query)
     );
+  } else {
+    filteredPosts.value = [...posts.value];
   }
-  
-  filteredPosts.value = result;
-  currentPage.value = 1; // Reset to first page when filters change
-};
-
-// Get current user ID (placeholder - implement according to your auth system)
-const getCurrentUserId = () => {
-  // This is a placeholder, replace with your actual implementation
-  // For example, you might parse the JWT token or get it from a store
-  return localStorage.getItem('userId') || null;
 };
 
 // Submit a new post
 const submitPost = async () => {
   if (!newPost.value.title.trim() || !newPost.value.content.trim()) return;
   
-  loading.value = true;
-  error.value = null;
-  
   try {
-    await axios.post('http://127.0.0.1:8000/freedom-wall/api/posts/', 
-      newPost.value,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
+    await createPost(newPost.value);
     
     // Reset form
     newPost.value = {
@@ -116,41 +79,28 @@ const submitPost = async () => {
       is_anonymous: true
     };
     
-    // Refresh posts and switch to All Posts tab
-    await fetchPosts();
+    // Switch to All Posts tab after creating a post
     activeTab.value = 'All Posts';
     handleTabChange('All Posts');
     
   } catch (err) {
-    console.error('Error creating post:', err.message);
-    error.value = 'Failed to create post. Please try again later.';
-  } finally {
-    loading.value = false;
+    // Error handling is managed by the composable
   }
 };
 
-// Delete post function
-const deletePost = async (postId) => {
-  if (!confirm('Are you sure you want to delete this post?')) return;
-  
-  loading.value = true;
-  try {
-    await axios.delete(`http://127.0.0.1:8000/freedom-wall/api/posts/${postId}/`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-    });
-    await fetchPosts();
-  } catch (err) {
-    console.error('Error deleting post:', err.message);
-    error.value = 'Failed to delete post. Please try again later.';
-  } finally {
-    loading.value = false;
+// Handle post deletion
+const handleDeletePost = () => {
+  // Refresh the posts for the current tab
+  if (activeTab.value === 'All Posts') {
+    getAllPosts();
   }
+  // My Posts component handles its own refresh
 };
 
 onMounted(() => {
-  fetchPosts();
+  // Initialize the page with All Posts tab
+  activeTab.value = 'All Posts';
+  getAllPosts();
 });
 </script>
 
@@ -173,18 +123,31 @@ onMounted(() => {
       @update:anonymous="newPost.is_anonymous = $event"
     />
     
-    <!-- My Post Component -->
-    <Mypost 
-      v-if="activeTab !== 'Create Post'"
+    <!-- All Posts Component (used for All Posts tab) -->
+    <Allpost 
+      v-if="activeTab === 'All Posts'"
       :filteredPosts="filteredPosts"
       :loading="loading"
       :searchQuery="searchQuery"
       :activeTab="activeTab"
       :currentPage="currentPage"
       :itemsPerPage="itemsPerPage"
-      @delete-post="deletePost"
+      @delete-post="handleDeletePost"
       @update:currentPage="currentPage = $event"
     />
+    
+    <!-- My Posts Component (used for My Posts tab) -->
+    <Mypost 
+      v-if="activeTab === 'My Posts'"
+      :loading="loading"
+      :searchQuery="searchQuery"
+      :currentPage="currentPage"
+      :itemsPerPage="itemsPerPage"
+      @delete-post="handleDeletePost"
+      @update:currentPage="currentPage = $event"
+    />
+    
+    <!-- Create Post tab is handled by FDtabs component -->
   </div>
 </template>
 

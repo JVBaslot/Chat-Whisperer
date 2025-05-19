@@ -1,6 +1,6 @@
+// Changes to Dashboard.vue script section
 <script setup>
 import { ref, onMounted, watch } from "vue";
-import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
 import UserTable from "@/views/dashboard/UserTable.vue";
 import ChatBox from "@/components/ChatBox.vue";
@@ -9,6 +9,14 @@ import MessagesTable from "@/views/dashboard/MessagesTable.vue";
 import FreedomWall from "@/pages/FreedomWall.vue";
 import Listings from "@/pages/Listings.vue"
 import Footer from "@/components/Footer.vue"
+import { 
+  fetchUsers as apiFetchUsers, 
+  fetchUserCounts as apiFetchUserCounts,
+  fetchMessages as apiFetchMessages,
+  createUser,
+  updateUser,
+  deleteUser as apiDeleteUser
+} from "@/pages/functions/dashboard.js";
 
 const users = ref([]);
 const totalUsers = ref(0);
@@ -17,19 +25,20 @@ const activeTab = ref(localStorage.getItem("activeTab") || "dashboard");
 const messages = ref([]);
 const messageError = ref(null); // Variable to store error messages
 
+// User CRUD operations
+const userDialogOpen = ref(false);
+const editingUser = ref(null);
+const userFormData = ref({
+  name: '',
+  email: '',
+  password: '',
+  is_superuser: false,
+  is_staff: false
+});
+
 const fetchUsers = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/api/users/", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    users.value = response.data.data.users.map((user) => ({
-      username: user.name,
-      email: user.email,
-      status: "active",
-      is_superuser: user.is_superuser,
-    }));
+    users.value = await apiFetchUsers();
   } catch (err) {
     console.error("Error fetching users:", err.message);
   }
@@ -37,16 +46,7 @@ const fetchUsers = async () => {
 
 const fetchMessages = async () => {
   try {
-    const response = await axios.get(
-      "http://127.0.0.1:8000/chat/api/messages/",
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      }
-    );
-    console.log("API Response:", response);
-    messages.value = response?.data || []; // Adjusted to directly use the response data
+    messages.value = await apiFetchMessages();
     messageError.value = null; // Clear error if the fetch is successful
   } catch (err) {
     console.error("Error fetching messages:", err.message);
@@ -56,13 +56,9 @@ const fetchMessages = async () => {
 
 const fetchUserCounts = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/api/user-counts/", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
-    totalUsers.value = response.data.total_users;
-    totalAdmins.value = response.data.total_admins;
+    const counts = await apiFetchUserCounts();
+    totalUsers.value = counts.totalUsers;
+    totalAdmins.value = counts.totalAdmins;
   } catch (err) {
     console.error("Error fetching user counts:", err.message);
   }
@@ -84,6 +80,64 @@ watch(activeTab, (newTab) => {
 });
 
 const isActiveTab = (tab) => activeTab.value === tab;
+
+const openAddUserDialog = () => {
+  editingUser.value = null;
+  userFormData.value = {
+    name: '',
+    email: '',
+    password: '',
+    is_superuser: false,
+    is_staff: false
+  };
+  userDialogOpen.value = true;
+};
+
+const openEditUserDialog = (user) => {
+  editingUser.value = user;
+  userFormData.value = {
+    name: user.name || user.username, // Just for display - won't be editable
+    email: user.email, // Just for display - won't be editable
+    is_superuser: user.is_superuser,
+    is_staff: user.is_staff
+  };
+  userDialogOpen.value = true;
+};
+
+const saveUser = async () => {
+  try {
+    if (editingUser.value) {
+      // Update existing user - only send the superuser and staff fields
+      const updateData = {
+        is_superuser: userFormData.value.is_superuser,
+        is_staff: userFormData.value.is_staff
+      };
+      await updateUser(editingUser.value.id, updateData);
+    } else {
+      // Create new user - send all fields
+      await createUser(userFormData.value);
+    }
+    userDialogOpen.value = false;
+    await fetchUsers();
+    await fetchUserCounts();
+  } catch (err) {
+    console.error("Error saving user:", err.message);
+    alert("Error saving user: " + (err.response?.data?.detail || err.message));
+  }
+};
+
+const deleteUser = async (userId) => {
+  if (!confirm('Are you sure you want to delete this user?')) return;
+  
+  try {
+    await apiDeleteUser(userId);
+    await fetchUsers();
+    await fetchUserCounts();
+  } catch (err) {
+    console.error("Error deleting user:", err.message);
+    alert("Error deleting user: " + (err.response?.data?.detail || err.message));
+  }
+};
 </script>
 
 
@@ -134,7 +188,7 @@ const isActiveTab = (tab) => activeTab.value === tab;
             Freedom Wall
           </span>
         </v-tab>
-        <v-tab :class="{ 'active-tab': isActiveTab('listings') }" value="listings">
+       <!--  <v-tab :class="{ 'active-tab': isActiveTab('listings') }" value="listings">
           <v-icon
             left
             class="me-1"
@@ -145,7 +199,7 @@ const isActiveTab = (tab) => activeTab.value === tab;
           <span :class="{ 'active-text': isActiveTab('listings') }">
             Listings
           </span>
-        </v-tab>
+        </v-tab> -->
       </v-tabs>
 
       <v-spacer></v-spacer>
@@ -188,7 +242,7 @@ const isActiveTab = (tab) => activeTab.value === tab;
 
     <!-- Main Content -->
     <v-main class="custom-main">
-<v-container fluid class="main-container pa-8 rounded-lg" style="min-height: 80vh">
+      <v-container fluid class="main-container pa-8 rounded-lg" style="min-height: 80vh">
         <!-- Dashboard Tab -->
         <v-row justify="start" v-if="activeTab === 'dashboard'" class="mb-4">
           <v-col cols="2">
@@ -210,7 +264,21 @@ const isActiveTab = (tab) => activeTab.value === tab;
           <v-col cols="10">
             <v-row justify="center">
               <v-col cols="12">
-                <UserTable :userData="users" />
+                <div class="d-flex align-center justify-space-between mb-4">
+                  <h2 class="text-h5">Users</h2>
+                  <v-btn 
+                    color="#FE4F5A" 
+                    prepend-icon="mdi-plus"
+                    @click="openAddUserDialog"
+                  >
+                    Add User
+                  </v-btn>
+                </div>
+                <UserTable 
+                  :userData="users" 
+                  @edit-user="openEditUserDialog" 
+                  @delete-user="deleteUser"
+                />
               </v-col>
               <v-col cols="12">
                 <v-row v-if="messageError">
@@ -259,10 +327,74 @@ const isActiveTab = (tab) => activeTab.value === tab;
       </v-container>
        <Footer />
     </v-main>
+
+    <!-- User Form Dialog -->
+    <v-dialog v-model="userDialogOpen" max-width="500px">
+      <v-card>
+        <v-card-title class="bg-light-pink text-white">
+          {{ editingUser ? 'Edit User' : 'Add New User' }}
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <v-form @submit.prevent="saveUser">
+            <v-text-field
+              v-model="userFormData.name"
+              label="Name"
+              required
+              variant="outlined"
+              class="mb-2"
+              :disabled="!!editingUser"
+            ></v-text-field>
+            <v-text-field
+              v-if="!editingUser"
+              v-model="userFormData.email"
+              label="Email"
+              type="email"
+              required
+              variant="outlined"
+              class="mb-2"
+            ></v-text-field>
+            <v-text-field
+              v-else
+              v-model="userFormData.email"
+              label="Email"
+              variant="outlined"
+              class="mb-2"
+              disabled
+            ></v-text-field>
+            <v-text-field
+              v-if="!editingUser"
+              v-model="userFormData.password"
+              label="Password"
+              type="password"
+              required
+              variant="outlined"
+              class="mb-2"
+            ></v-text-field>
+            <v-switch
+              v-model="userFormData.is_superuser"
+              label="Admin User"
+              color="#FE4F5A"
+              hide-details
+              class="mb-2"
+            ></v-switch>
+            <v-switch
+              v-model="userFormData.is_staff"
+              label="Staff User"
+              color="#FE4F5A"
+              hide-details
+              class="mb-4"
+            ></v-switch>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="userDialogOpen = false" color="grey" variant="text">Cancel</v-btn>
+          <v-btn @click="saveUser" color="red" class="text-white">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
-
-
 
 <style scoped>
 .custom-main {
@@ -281,5 +413,8 @@ const isActiveTab = (tab) => activeTab.value === tab;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   border: 1px solid #fe4f5a;
+}
+.bg-light-pink {
+  background-color: #FE4F5A;
 }
 </style>

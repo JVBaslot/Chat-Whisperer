@@ -37,6 +37,11 @@ const handleUpdateContent = (value) => {
 const handleUpdateAnonymous = (value) => {
   emit('update:anonymous', value);
 };
+
+const navigateToAllPosts = () => {
+  tab.value = 0; // Set tab to 'All Posts'
+  emit('change-tab', tabs[0]);
+};
 </script>
 
 <template>
@@ -76,6 +81,7 @@ const handleUpdateAnonymous = (value) => {
         @update:title="handleUpdateTitle"
         @update:content="handleUpdateContent"
         @update:anonymous="handleUpdateAnonymous"
+        @navigate-to-all-posts="navigateToAllPosts"
       />
       
     </v-card-text>
