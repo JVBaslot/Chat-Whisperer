@@ -25,9 +25,12 @@ class PostViewSet(viewsets.ModelViewSet):
             instance = self.get_object()
             if instance.user == self.request.user or self.request.user.is_staff:
                 serializer.save()
+                return None  # Return None to indicate success
             else:
                 return Response({"detail": "You do not have permission to edit this post."}, 
                                status=status.HTTP_403_FORBIDDEN)
+        return Response({"detail": "Authentication required."}, 
+                       status=status.HTTP_401_UNAUTHORIZED)
     
     def perform_destroy(self, instance):
         # Only allow post owners or staff to delete posts
@@ -36,6 +39,17 @@ class PostViewSet(viewsets.ModelViewSet):
         else:
             return Response({"detail": "You do not have permission to delete this post."}, 
                            status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail=False, methods=['get'])
+    def user_posts(self, request):
+        user_id = request.query_params.get('user_id', None)
+        if user_id is None:
+            return Response({"detail": "User ID is required."}, 
+                           status=status.HTTP_400_BAD_REQUEST)
+        
+        posts = Post.objects.filter(user_id=user_id)
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['delete'])
     def delete_post(self, request, pk=None):
@@ -53,6 +67,8 @@ class PostViewSet(viewsets.ModelViewSet):
         if post.user == request.user or request.user.is_staff:
             serializer = self.get_serializer(post, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
+            # Even if is_anonymous is True, we still save the user_id
+            # The serializer will handle displaying "Anonymous" for the author field
             serializer.save()
             return Response(serializer.data)
         else:

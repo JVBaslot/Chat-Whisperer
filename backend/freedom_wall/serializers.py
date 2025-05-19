@@ -27,7 +27,7 @@ class PostSerializer(serializers.ModelSerializer):
             validated_data['author'] = request.user.name
         else:
             # For anonymous posts, don't link to user account
-            validated_data['user'] = None
+            validated_data['user'] = request.user
             validated_data['author'] = "Anonymous"
             
         return super().create(validated_data)

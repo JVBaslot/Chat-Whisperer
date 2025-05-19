@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, defineEmits } from "vue";
 import avatarImage from "@/assets/images/user.png";
 
 const props = defineProps({
@@ -8,6 +8,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits(['edit-user', 'delete-user']);
 
 const headers = [
   {
@@ -30,6 +32,11 @@ const headers = [
     title: "Staff",
     key: "is_staff",
   },
+  {
+    title: "Actions",
+    key: "actions",
+    sortable: false,
+  },
 ];
 
 const resolveUserStatusVariant = (stat) => {
@@ -40,6 +47,16 @@ const resolveUserStatusVariant = (stat) => {
 
   return "primary";
 };
+
+const handleEdit = (user) => {
+  emit('edit-user', user);
+};
+
+const handleDelete = (userId) => {
+  emit('delete-user', userId);
+};
+
+
 </script>
 
 <template>
@@ -97,6 +114,32 @@ const resolveUserStatusVariant = (stat) => {
         </v-chip>
       </template>
 
+      <!-- Actions -->
+      <template #item.actions="{ item }">
+        <div class="d-flex gap-2">
+          <v-btn 
+            icon 
+            size="small" 
+            color="primary" 
+            @click="handleEdit(item)"
+            variant="tonal"
+            class="action-btn"
+          >
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+          <v-btn 
+            icon 
+            size="small" 
+            color="error" 
+            @click="handleDelete(item.id)"
+            variant="tonal"
+            class="action-btn"
+          >
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </div>
+      </template>
+
       <template #bottom />
     </v-data-table>
   </v-card>
@@ -113,4 +156,11 @@ const resolveUserStatusVariant = (stat) => {
   border: 1px solid #FE4F5A; /* Keeping the base color for the border */
 }
 
+.action-btn {
+  transition: transform 0.2s;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
 </style>
